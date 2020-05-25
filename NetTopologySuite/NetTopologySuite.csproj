@@ -6,18 +6,20 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <NoWarn>659,168,1587</NoWarn>
+    <AssemblyName>DotSpatial.NetTopologySuite</AssemblyName>
+    <RootNamespace>DotSpatial.NetTopologySuite</RootNamespace>
   </PropertyGroup>
 
   <Import Project="$(SolutionDir)NetTopologySuite.Common.props" />
 
   <PropertyGroup Label="Assembly Info">
-    <AssemblyTitle>NetTopologySuite</AssemblyTitle>
+    <AssemblyTitle>DotSpatial.NetTopologySuite</AssemblyTitle>
     <Description>A .NET library for GIS operations, direct porting of JTS Topology Suite $(JTSCompatibilityLevel) library</Description>
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet Package Info">
-    <PackageId>NetTopologySuite</PackageId>
-    <Title>NTS - Topology Suite</Title>
+    <PackageId>DotSpatial.NetTopologySuite</PackageId>
+    <Title>Custom NTS - Topology Suite for DotSpatial</Title>
     <Authors>NetTopologySuite - Team</Authors>
     <Owners>NetTopologySuite - Team</Owners>
     <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>

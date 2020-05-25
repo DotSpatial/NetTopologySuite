@@ -89,6 +89,25 @@ namespace NetTopologySuite.Geometries
          */
         private double _maxY;
 
+        /**
+         *  the minimum z-coordinate
+         */
+        private double _minZ = double.NaN;
+
+        /*
+         *  the maximum z-coordinate
+         */
+        private double _maxZ = double.NaN;
+
+        /*
+         * the minimum m-coordinate
+         */
+        private double _minM = double.NaN;
+
+        /*
+         *  the maximum m-coordinate
+         */
+        private double _maxM = double.NaN;
         /// <summary>
         /// Creates a null <c>Envelope</c>.
         /// </summary>
@@ -110,6 +129,32 @@ namespace NetTopologySuite.Geometries
         }
 
         /// <summary>
+        /// Creates an <c>Envelope</c> for a region defined by maximum and minimum values.
+        /// </summary>
+        /// <param name="x1">The first x-value.</param>
+        /// <param name="x2">The second x-value.</param>
+        /// <param name="y1">The first y-value.</param>
+        /// <param name="y2">The second y-value.</param>
+        public Envelope(double x1, double x2, double y1, double y2, double z1, double z2, double m1, double m2)
+        {
+            Init(x1, x2, y1, y2);
+            InitSingle(m1, m2, ref _minM, ref _maxM);
+            InitSingle(z1, z2, ref _minZ, ref _maxZ);
+        }
+
+        /// <summary>
+        /// Creates an <c>Envelope</c> for a region defined by maximum and minimum values.
+        /// </summary>
+        /// <param name="x1">The first x-value.</param>
+        /// <param name="x2">The second x-value.</param>
+        /// <param name="y1">The first y-value.</param>
+        /// <param name="y2">The second y-value.</param>
+        public Envelope(double x1, double x2, double y1, double y2, double z1, double z2)
+        {
+            Init(x1, x2, y1, y2);
+            InitSingle(z1, z2, ref _minZ, ref _maxZ);
+        }
+        /// <summary>
         /// Creates an <c>Envelope</c> for a region defined by two Coordinates.
         /// </summary>
         /// <param name="p1">The first Coordinate.</param>
@@ -117,6 +162,8 @@ namespace NetTopologySuite.Geometries
         public Envelope(Coordinate p1, Coordinate p2)
         {
             Init(p1.X, p2.X, p1.Y, p2.Y);
+            InitSingle(p1.Z, p2.Z, ref _minZ, ref _maxZ);
+            InitSingle(p1.M, p2.M, ref _minM, ref _maxM);
         }
 
         /// <summary>
@@ -126,6 +173,8 @@ namespace NetTopologySuite.Geometries
         public Envelope(Coordinate p)
         {
             Init(p.X, p.X, p.Y, p.Y);
+            InitSingle(p.Z, p.Z, ref _minZ, ref _maxZ);
+            InitSingle(p.M, p.M, ref _minM, ref _maxM);
         }
 
         /// <summary>
@@ -177,6 +226,20 @@ namespace NetTopologySuite.Geometries
             }
         }
 
+        private void InitSingle(double x1, double x2, ref double _minX, ref double _maxX)
+        {
+            if (x1 < x2)
+            {
+                _minX = x1;
+                _maxX = x2;
+            }
+            else
+            {
+                _minX = x2;
+                _maxX = x1;
+            }
+        }
+
         /// <summary>
         /// Initialize an <c>Envelope</c> for a region defined by two Coordinates.
         /// </summary>
@@ -206,6 +269,10 @@ namespace NetTopologySuite.Geometries
             _maxX = env.MaxX;
             _minY = env.MinY;
             _maxY = env.MaxY;
+            _minM = env.MinM;
+            _maxM = env.MaxM;
+            _minZ = env.MinZ;
+            _maxZ = env.MaxZ;
         }
 
         /// <summary>
@@ -217,6 +284,10 @@ namespace NetTopologySuite.Geometries
             _maxX = -1;
             _minY = 0;
             _maxY = -1;
+            _minM = double.NaN;
+            _maxM = double.NaN;
+            _minZ = double.NaN;
+            _maxZ = double.NaN;
         }
 
         /// <summary>
@@ -303,6 +374,42 @@ namespace NetTopologySuite.Geometries
         }
 
         /// <summary>
+        /// Returns the <c>Envelope</c>s minimum z-value.
+        /// </summary>
+        /// <returns>The minimum z-coordinate.</returns>
+        public double MinZ
+        {
+            get { return _minZ; }
+        }
+
+        /// <summary>
+        /// Returns the <c>Envelope</c>s maximum z-value.
+        /// </summary>
+        /// <returns>The maximum z-coordinate.</returns>
+        public double MaxZ
+        {
+            get { return _maxZ; }
+        }
+
+        /// <summary>
+        /// Returns the <c>Envelope</c>s minimum y-value.
+        /// </summary>
+        /// <returns>The minimum m-coordinate.</returns>
+        public double MinM
+        {
+            get { return _minM; }
+        }
+
+        /// <summary>
+        /// Returns the <c>Envelope</c>s maximum m-value. 
+        /// </summary>
+        /// <returns>The maximum m-coordinate.</returns>
+        public double MaxM
+        {
+            get { return _maxM; }
+        }
+
+        /// <summary>
         /// Gets the area of this envelope.
         /// </summary>
         /// <returns>The area of the envelope, or 0.0 if envelope is null</returns>
@@ -385,7 +492,38 @@ namespace NetTopologySuite.Geometries
         /// <param name="p">The Coordinate.</param>
         public void ExpandToInclude(Coordinate p)
         {
-            ExpandToInclude(p.X, p.Y);
+            if (IsNull)
+            {
+                _minX = p.X;
+                _maxX = p.X;
+                _minY = p.Y;
+                _maxY = p.Y;
+
+                _minX = p.Z;
+                _maxX = p.Z;
+                _minY = p.M;
+                _maxY = p.M;
+            }
+            else
+            {
+                if (p.X < _minX)
+                    _minX = p.X;
+                if (p.X > _maxX)
+                    _maxX = p.X;
+                if (p.Y < _minY)
+                    _minY = p.Y;
+                if (p.Y > _maxY)
+                    _maxY = p.Y;
+
+                if (p.Z < _minX)
+                    _minX = p.Z;
+                if (p.Z > _maxX)
+                    _maxX = p.Z;
+                if (p.M < _minY)
+                    _minY = p.M;
+                if (p.M > _maxY)
+                    _maxY = p.M;
+            }
         }
 
         /// <summary>
@@ -434,6 +572,11 @@ namespace NetTopologySuite.Geometries
                 _maxX = other.MaxX;
                 _minY = other.MinY;
                 _maxY = other.MaxY;
+
+                _minM = other.MinM;
+                _maxM = other.MaxM;
+                _minZ = other.MinZ;
+                _maxZ = other.MaxZ;
             }
             else
             {
@@ -445,6 +588,15 @@ namespace NetTopologySuite.Geometries
                     _minY = other.MinY;
                 if (other.MaxY > _maxY)
                     _maxY = other.MaxY;
+
+                if (other.MinM < _minM)
+                    _minM = other.MinM;
+                if (other.MaxM > _maxM)
+                    _maxM = other.MaxM;
+                if (other.MinZ < _minZ)
+                    _minZ = other.MinZ;
+                if (other.MaxZ > _maxZ)
+                    _maxZ = other.MaxZ;
             }
         }
 
@@ -466,7 +618,28 @@ namespace NetTopologySuite.Geometries
             double maxX = (other._maxX > _maxX) ? other._maxX : _maxX;
             double minY = (other._minY < _minY) ? other._minY : _minY;
             double maxY = (other._maxY > _maxY) ? other._maxY : _maxY;
-            return new Envelope(minX, maxX, minY, maxY);
+
+            double minZ = double.NaN;
+            double maxZ = double.NaN;
+            if (NumOrdinates > 2)
+            {
+
+
+                minZ = (other._minZ < _minZ) ? other._minZ : _minZ;
+                maxZ = (other._maxZ > _maxZ) ? other._maxZ : _maxZ;
+            }
+
+            double minM = double.NaN;
+            double maxM = double.NaN;
+
+            if (NumOrdinates > 3)
+            {
+                minM = (other._minM < _minM) ? other._minM : _minM;
+                maxM = (other._maxM > _maxM) ? other._maxM : _maxM;
+            }
+
+            return new Envelope(minX, maxX, minY, maxY, minZ, maxZ, minM, maxM);
+
         }
         /// <summary>
         /// Translates this envelope by given amounts in the X and Y direction.
@@ -793,7 +966,9 @@ namespace NetTopologySuite.Geometries
             else
             {
                 sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}, ", _minX, _maxX);
-                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}]", _minY, _maxY);
+                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}, ", _minY, _maxY);
+                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}, ", _minZ, _maxZ);
+                sb.AppendFormat(NumberFormatInfo.InvariantInfo, "{0:R} : {1:R}]", _minM, _maxM);
             }
             return sb.ToString();
         }
@@ -855,6 +1030,14 @@ namespace NetTopologySuite.Geometries
 
             return new Envelope(ordinatesValues[0], ordinatesValues[1],
                                 ordinatesValues[2], ordinatesValues[3]);
+        }
+
+        /// <summary>
+        /// Gets the number of ordinates for this envelope.
+        /// </summary>
+        public int NumOrdinates
+        {
+            get { return double.IsNaN(MinM) ? double.IsNaN(MinZ) ? 2 : 3 : 4; }
         }
     }
 }

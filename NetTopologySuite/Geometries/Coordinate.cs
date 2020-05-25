@@ -35,6 +35,10 @@ namespace NetTopologySuite.Geometries
         private protected double _x;
 
         private protected double _y;
+		
+        private protected double _m = NullOrdinate;
+        
+		private protected double _z = NullOrdinate;
 
         /// <summary>
         /// Gets or sets the X-ordinate value.
@@ -64,8 +68,8 @@ namespace NetTopologySuite.Geometries
         /// </exception>
         public virtual double Z
         {
-            get => NullOrdinate; 
-            set { throw new InvalidOperationException($"{GetType().Name} does not support setting Z-ordinate");}
+            get => _z;
+            set { _z = value; }
         }
 
         /// <summary>
@@ -78,8 +82,8 @@ namespace NetTopologySuite.Geometries
         /// </exception>
         public virtual double M
         {
-            get => NullOrdinate;
-            set { throw new InvalidOperationException($"{GetType().Name} does not support setting M-measure"); }
+            get => _m;
+            set { _m = value; }
         }
 
         /// <summary>
@@ -104,6 +108,21 @@ namespace NetTopologySuite.Geometries
         /// </summary>
         /// <param name="c"><c>Coordinate</c> to copy.</param>
         public Coordinate(Coordinate c) : this(c.X, c.Y) { }
+      
+	    public Coordinate(double x, double y, double z, double m)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            M = m;
+        }
+        public Coordinate(double x, double y, double z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            M = NullOrdinate;
+        }
 
         /// <summary>
         /// Gets or sets the value for the given ordinate.
@@ -210,6 +229,8 @@ namespace NetTopologySuite.Geometries
             {
                 X = value.X;
                 Y = value.Y;
+                Z = value.Z;
+                M = value.M;
             }
         }
 
@@ -311,7 +332,18 @@ namespace NetTopologySuite.Geometries
             return Y > other.Y ? 1 : 0;
         }
 
-        /// <summary>
+        public bool Equals3D(Coordinate other)
+        {
+            if (other == null) return false;
+            return (X == other.X) && (Y == other.Y) && ((Z == other.Z) || (double.IsNaN(Z) && double.IsNaN(other.Z)));
+        }
+		
+        public bool EqualInZ(Coordinate c, double tolerance)
+        {
+            return EqualsWithTolerance(Z, c.Z, tolerance);
+        }
+
+        /// <summary>		
         /// Create a copy of this <see cref="Coordinate"/>.
         /// </summary>
         /// <returns>A copy of this coordinate.</returns>
@@ -333,6 +365,13 @@ namespace NetTopologySuite.Geometries
             return Math.Sqrt(dx * dx + dy * dy);
         }
 
+        public double Distance3D(Coordinate c)
+        {
+            double dx = X - c.X;
+            double dy = Y - c.Y;
+            double dz = Z - c.Z;
+            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
 #region System.Object overrides
         /// <summary>
         /// Returns <c>true</c> if <c>other</c> has the same values for the x and y ordinates.
@@ -353,21 +392,35 @@ namespace NetTopologySuite.Geometries
         /// <returns>A hashcode for this coordinate.</returns>
         public sealed override int GetHashCode()
         {
-            var result = 17;
+            int result = 17;
             // ReSharper disable NonReadonlyFieldInGetHashCode
             result = 37 * result + X.GetHashCode();
             result = 37 * result + Y.GetHashCode();
+            if (!double.IsNaN(Z)) result = 37 * result + Z.GetHashCode();
             // ReSharper restore NonReadonlyFieldInGetHashCode
             return result;
         }
 
         /// <summary>
+        public bool IsEmpty()
+        {
+            return (double.IsNaN(X) || double.IsNaN(Y));
+        }
+		
         /// Returns a <c>string</c> of the form <I>(x,y,z)</I> .
         /// </summary>
         /// <returns><c>string</c> of the form <I>(x,y,z)</I></returns>
         public override string ToString()
         {
-            return string.Format(NumberFormatInfo.InvariantInfo, "({0:R}, {1:R})", X, Y);
+            return string.Format(NumberFormatInfo.InvariantInfo, "({0:R}, {1:R}, {2:R}, {3:R})", X, Y, Z, M);
+        }
+		
+        public int NumOrdinates
+        {
+            get
+            {
+                return double.IsNaN(M) ? double.IsNaN(Z) ? 2 : 3 : 4;
+            }
         }
 #endregion
     }
